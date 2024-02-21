@@ -51,6 +51,7 @@ public class QueueConsumer<T> implements WorkHandler<DataEvent<T>> {
     public void onEvent(final DataEvent<T> t) {
         if (Objects.nonNull(t)) {
             ThreadPoolExecutor executor = orderly(t);
+            // factory 用于产生实际用于处理
             QueueConsumerExecutor<T> queueConsumerExecutor = factory.create();
             queueConsumerExecutor.setData(t.getData());
             // help gc

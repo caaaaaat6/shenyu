@@ -129,30 +129,39 @@ public abstract class AbstractContextRefreshedEventListener<T, A extends Annotat
     @Override
     public void onApplicationEvent(@NonNull final ContextRefreshedEvent event) {
         context = event.getApplicationContext();
+        // 拿到 beans
         Map<String, T> beans = getBeans(context);
         if (MapUtils.isEmpty(beans)) {
             return;
         }
+        // 原子地设置 registered 为 true
         if (!registered.compareAndSet(false, true)) {
             return;
         }
         if (isDiscoveryLocalMode) {
+            // 如果是“本地发现”模式，发布用于注册 URI 的 DTO
             publisher.publishEvent(buildURIRegisterDTO(context, beans));
         }
+        // 处理每个 bean，具体是发布 bean 的注册信息给 disruptor
         beans.forEach(this::handle);
+        // apiModules 的 key 是 beanName，value 是 bean 的成员变量
         Map<String, Object> apiModules = context.getBeansWithAnnotation(ApiModule.class);
+        // 处理每个 apiModules，具体是发布 apiModules 的注册信息给 disruptor
         apiModules.forEach((k, v) -> handleApiDoc(v, beans));
     }
 
     private void handleApiDoc(final Object bean, final Map<String, T> beans) {
+        // 获取bean的实际类对象，考虑到可能存在代理等情况
         Class<?> apiModuleClass = AopUtils.isAopProxy(bean) ? AopUtils.getTargetClass(bean) : bean.getClass();
         ApiModule apiModule = apiModuleClass.getDeclaredAnnotation(ApiModule.class);
         if (Objects.nonNull(apiModule) && apiModule.generated()) {
+            // 获取类中所有独特声明的方法，不包括继承的方法
             final Method[] methods = ReflectionUtils.getUniqueDeclaredMethods(apiModuleClass);
             for (Method method : methods) {
                 if (method.isAnnotationPresent(ApiDoc.class)) {
                     List<ApiDocRegisterDTO> apis = buildApiDocDTO(bean, method, beans);
                     for (ApiDocRegisterDTO apiDocRegisterDTO : apis) {
+                        // 这个方法最终会向 disruptor 发布一个关于 apiDoc 注册的 DTO 消息
                         publisher.publishEvent(apiDocRegisterDTO);
                     }
                 }
@@ -258,16 +267,23 @@ public abstract class AbstractContextRefreshedEventListener<T, A extends Annotat
                                                           Map<String, T> beans);
 
     protected void handle(final String beanName, final T bean) {
+        // 拿到 bean 的被代理的真正的那个实例类
         Class<?> clazz = getCorrectedClass(bean);
+        // 使用AnnotatedElementUtils.findMergedAnnotation查找bean类上的特定注解
         final A beanShenyuClient = AnnotatedElementUtils.findMergedAnnotation(clazz, getAnnotationType());
+        // 基于bean的类和注解构建一个API的超级路径（可能是一个基础URL路径）
         final String superPath = buildApiSuperPath(clazz, beanShenyuClient);
         // Compatible with previous versions
+        // 检查bean上的注解是否不为null，并且superPath包含通配符"*"
         if (Objects.nonNull(beanShenyuClient) && superPath.contains("*")) {
+            // 这个方法最终会向 disruptor 发布一个关于 MetaData DTO 的消息
             handleClass(clazz, bean, beanShenyuClient, superPath);
             return;
         }
+        // 获取类中所有独特声明的方法，不包括继承的方法
         final Method[] methods = ReflectionUtils.getUniqueDeclaredMethods(clazz);
         for (Method method : methods) {
+            // 这个方法最终也会向 disruptor 发布一个关于 MetaData DTO 的消息
             handleMethod(bean, clazz, beanShenyuClient, method, superPath);
         }
     }

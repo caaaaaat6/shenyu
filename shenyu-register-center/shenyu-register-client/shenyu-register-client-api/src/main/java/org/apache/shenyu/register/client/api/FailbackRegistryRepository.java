@@ -72,6 +72,7 @@ public abstract class FailbackRegistryRepository implements ShenyuClientRegister
     @Override
     public void persistURI(final URIRegisterDTO registerDTO) {
         try {
+            // 1. 同样是模板方法，交由子类 HttpClientRegisterRepository 实现
             this.doPersistURI(registerDTO);
         } catch (Exception ex) {
             //If a failure occurs, it needs to be added to the retry list.

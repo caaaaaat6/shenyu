@@ -93,8 +93,11 @@ public class ShenyuConfiguration {
      * @return {@linkplain ShenyuWebHandler}
      */
     @Bean("webHandler")
+    // 用了 ObjectProvider 来得到插件，而不是 ApplicationContext，解耦合、获取不止一个插件 Bean。
     public ShenyuWebHandler shenyuWebHandler(final ObjectProvider<List<ShenyuPlugin>> plugins, final ShenyuConfig config, @Lazy final ShenyuLoaderService shenyuLoaderService) {
+        // 拿到插件
         List<ShenyuPlugin> pluginList = plugins.getIfAvailable(Collections::emptyList);
+        // 对插件排序
         List<ShenyuPlugin> shenyuPlugins = pluginList.stream()
                 .sorted(Comparator.comparingInt(ShenyuPlugin::getOrder)).collect(Collectors.toList());
         shenyuPlugins.forEach(shenyuPlugin -> LOG.info("load plugin:[{}] [{}]", shenyuPlugin.named(), shenyuPlugin.getClass().getName()));

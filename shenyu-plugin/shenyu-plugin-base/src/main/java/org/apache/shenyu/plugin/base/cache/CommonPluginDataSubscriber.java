@@ -197,6 +197,7 @@ public class CommonPluginDataSubscriber implements PluginDataSubscriber {
     private <T> void subscribeDataHandler(final T classData, final DataEventTypeEnum dataType) {
         if (dataType == DataEventTypeEnum.UPDATE) {
             Optional.ofNullable(classData)
+                    // 如果要更新的数据不为空，则更新缓存数据
                     .ifPresent(data -> updateCacheData(classData));
         } else if (dataType == DataEventTypeEnum.DELETE) {
             Optional.ofNullable(classData)
@@ -234,7 +235,9 @@ public class CommonPluginDataSubscriber implements PluginDataSubscriber {
                 MatchDataCache.getInstance().removeRuleData(pluginName);
             }
         } else if (data instanceof SelectorData) {
+            // 数据是 SelectorData 的实例，那么执行以下代码
             SelectorData selectorData = (SelectorData) data;
+            // BaseDataCache 缓存
             BaseDataCache.getInstance().cacheSelectData(selectorData);
             Optional.ofNullable(handlerMap.get(selectorData.getPluginName()))
                     .ifPresent(handler -> handler.handlerSelector(selectorData));
@@ -291,6 +294,7 @@ public class CommonPluginDataSubscriber implements PluginDataSubscriber {
                     .ifPresent(handler -> handler.removePlugin(pluginData));
             eventPublisher.publishEvent(new PluginHandlerEvent(PluginHandlerEventEnum.DELETE, pluginData));
         } else if (data instanceof SelectorData) {
+            // 数据是 SelectorData 的实例，那么执行一下代码
             SelectorData selectorData = (SelectorData) data;
             BaseDataCache.getInstance().removeSelectData(selectorData);
             Optional.ofNullable(handlerMap.get(selectorData.getPluginName()))

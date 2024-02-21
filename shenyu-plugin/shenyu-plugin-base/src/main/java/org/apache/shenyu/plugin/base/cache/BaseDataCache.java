@@ -115,7 +115,8 @@ public final class BaseDataCache {
     public PluginData obtainPluginData(final String pluginName) {
         return PLUGIN_MAP.get(pluginName);
     }
-    
+
+    // 我觉得这个方法名可能是敲错了，应该是 cacheSelectorData 才对
     /**
      * Cache select data.
      *
@@ -289,12 +290,18 @@ public final class BaseDataCache {
         String key = data.getPluginName();
         synchronized (SELECTOR_MAP) {
             if (SELECTOR_MAP.containsKey(key)) {
+                // 存在 key，说明为更新操作
                 List<SelectorData> existList = SELECTOR_MAP.get(key);
+                // 1. 筛选出不是这个 selectorId 的选择器数据，保存到 resultList 中
                 final List<SelectorData> resultList = existList.stream().filter(r -> !r.getId().equals(data.getId())).collect(Collectors.toList());
+                // 2. 向 resultList 加入要更新的数据。1、2 两步相当于先删除了原 selectorId 的数据，然后再添加进新的数据
                 resultList.add(data);
+                // 3. 然后将更新后的 selectorData 集合排序
                 final List<SelectorData> collect = resultList.stream().sorted(Comparator.comparing(SelectorData::getSort)).collect(Collectors.toList());
+                // 4. 更新 SELECTOR_MAP
                 SELECTOR_MAP.put(key, collect);
             } else {
+                // 不存在 key，说明为新增操作
                 SELECTOR_MAP.put(key, Lists.newArrayList(data));
             }
         }

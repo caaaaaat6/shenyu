@@ -105,31 +105,42 @@ public class DisruptorProviderManage<T> {
      * @param isOrderly the orderly Whether to execute sequentially.
      */
     public void startup(final boolean isOrderly) {
+        // 创建一个定制的线程池，用于消费者
         OrderlyExecutor executor = new OrderlyExecutor(isOrderly, consumerSize, consumerSize, 0, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(),
                 DisruptorThreadFactory.create("shenyu_disruptor_consumer_", false), new ThreadPoolExecutor.AbortPolicy());
         int newConsumerSize = this.consumerSize;
         EventFactory<DataEvent<T>> eventFactory;
+        // 根据是否有序来调整消费者数量和选择事件工厂
         if (isOrderly) {
+            // 有序模式下，消费者数量设为1，使用有序的事件工厂
             newConsumerSize = 1;
             eventFactory = new OrderlyDisruptorEventFactory<>();
         } else {
+            // 无序模式下，使用默认的事件工厂
             eventFactory = new DisruptorEventFactory<>();
         }
+        // 创建Disruptor实例，配置其基本参数
         Disruptor<DataEvent<T>> disruptor = new Disruptor<>(eventFactory,
                 size,
                 DisruptorThreadFactory.create("shenyu_disruptor_provider_" + consumerFactory.fixName(), false),
                 ProducerType.MULTI,
                 new BlockingWaitStrategy());
+        // 创建消费者数组，根据newConsumerSize指定的大小
         @SuppressWarnings("all")
         QueueConsumer<T>[] consumers = new QueueConsumer[newConsumerSize];
         for (int i = 0; i < newConsumerSize; i++) {
             consumers[i] = new QueueConsumer<>(executor, consumerFactory);
         }
+        // 将消费者注册到Disruptor，使用工作池模式
         disruptor.handleEventsWithWorkerPool(consumers);
+        // 设置默认的异常处理器，这里选择忽略异常
         disruptor.setDefaultExceptionHandler(new IgnoreExceptionHandler());
+        // 启动Disruptor
         disruptor.start();
+        // 获取Disruptor的环形缓冲区，用于发布事件
         RingBuffer<DataEvent<T>> ringBuffer = disruptor.getRingBuffer();
+        // 创建并存储DisruptorProvider实例，用于向Disruptor发布事件
         provider = new DisruptorProvider<>(ringBuffer, disruptor, isOrderly);
     }
     

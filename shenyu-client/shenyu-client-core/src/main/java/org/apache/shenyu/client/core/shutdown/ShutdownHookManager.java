@@ -121,6 +121,7 @@ public final class ShutdownHookManager {
         if (shutdownInProgress.get()) {
             throw new IllegalStateException("Shutdown in progress, cannot add a shutdownHook");
         }
+        // 添加关闭应用时要执行的注销注册的钩子
         hooks.add(new HookEntry(shutdownHook, priority));
     }
 

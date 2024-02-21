@@ -70,6 +70,7 @@ public interface SelectorService extends PageService<SelectorQueryCondition, Sel
                 Assert.notBlack(selectorConditionDTO.getParamName(), "if type is custom, paramName is not empty");
             });
         }
+        // id 为空，则为创建 selector；否则 id 不为空，则为更新 selector
         return StringUtils.isEmpty(selectorDTO.getId()) ? create(selectorDTO) : update(selectorDTO);
     }
 

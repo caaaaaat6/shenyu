@@ -57,7 +57,11 @@ public final class RegisterUtils {
             LOGGER.error("{} client register error accessToken is null, please check the config : {} ", type, json);
             return;
         }
+        // 1. 构建 http 的 header
         Headers headers = new Headers.Builder().add(Constants.X_ACCESS_TOKEN, accessToken).build();
+        // 2. 在此通过 http 调用 Admin 的服务进行注册，
+        //    url 为 Admin 端的注册用的接口，有 localhost:9095/shenyu-client/register-metadata 等url；
+        //    json 为要传输的注册信息
         String result = OkHttpTools.getInstance().post(url, json, headers);
         if (Objects.equals(SUCCESS, result)) {
             LOGGER.info("{} client register success: {} ", type, json);

@@ -62,6 +62,7 @@ public class ShenyuClientURIExecutorSubscriber implements ExecutorTypeSubscriber
         for (URIRegisterDTO uriRegisterDTO : dataList) {
             Stopwatch stopwatch = Stopwatch.createStarted();
             while (true) {
+                // 连得上就跳出死循环
                 try (Socket ignored = new Socket(uriRegisterDTO.getHost(), uriRegisterDTO.getPort())) {
                     break;
                 } catch (IOException e) {
@@ -82,12 +83,16 @@ public class ShenyuClientURIExecutorSubscriber implements ExecutorTypeSubscriber
                     }
                 }
             }
+            // 1. 延迟应用关闭时的其他钩子
             ShenyuClientShutdownHook.delayOtherHooks();
+            // 2. 给 Admin 端发送 DTO 注册信息
             shenyuClientRegisterRepository.persistURI(uriRegisterDTO);
+            // 3. 向应用添加一个钩子，使得在应用关闭时，应用自动开启一个新线程去注销注册信息
             ShutdownHookManager.get().addShutdownHook(new Thread(() -> {
                 final URIRegisterDTO offlineDTO = new URIRegisterDTO();
                 BeanUtils.copyProperties(uriRegisterDTO, offlineDTO);
                 offlineDTO.setEventType(EventType.OFFLINE);
+                // 给 Admin 端发送下线 DTO
                 shenyuClientRegisterRepository.offline(offlineDTO);
             }), 2);
         }

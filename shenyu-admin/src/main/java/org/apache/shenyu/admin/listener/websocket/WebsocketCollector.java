@@ -130,13 +130,14 @@ public class WebsocketCollector {
         if (StringUtils.isBlank(message)) {
             return;
         }
-        
+        // 如果是 MYSELF，是全量数据，从 ThreadLocal 中拿到 session，主动发消息 push
         if (DataEventTypeEnum.MYSELF == type) {
             Session session = (Session) ThreadLocalUtils.get(SESSION_KEY);
             if (Objects.nonNull(session)) {
                 sendMessageBySession(session, message);
             }
         } else {
+            // 否则向所有 session 发要同步的数据
             SESSION_SET.forEach(session -> sendMessageBySession(session, message));
         }
         

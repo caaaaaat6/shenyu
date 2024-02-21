@@ -100,6 +100,7 @@ public class SelectorController implements PagedController<SelectorQueryConditio
      */
     @PostMapping("")
     public ShenyuAdminResult createSelector(@Valid @RequestBody final SelectorDTO selectorDTO) {
+        // 调用 Service 创建 Selector
         selectorService.createOrUpdate(selectorDTO);
         return ShenyuAdminResult.success(ShenyuResultMessage.CREATE_SUCCESS, selectorDTO.getId());
     }

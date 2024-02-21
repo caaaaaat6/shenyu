@@ -189,10 +189,15 @@ public final class ShenyuWebsocketClient extends WebSocketClient {
      * @param result result
      */
     private void handleResult(final String result) {
+        // 打印日志
         LOG.info("handleResult({})", result);
+        // 调用 Gson 包，将 Json 字符串转换为 WebsocketData
         WebsocketData<?> websocketData = GsonUtils.getInstance().fromJson(result, WebsocketData.class);
+        // 因为我们是新增的 Selector，所以这里 groupEnum 为 ConfigGroupEnum.SELECTOR
         ConfigGroupEnum groupEnum = ConfigGroupEnum.acquireByName(websocketData.getGroupType());
+        // 事件是 UPDATE
         String eventType = websocketData.getEventType();
+        // 再转成 Json 字符串
         String json = GsonUtils.getInstance().toJson(websocketData.getData());
         websocketDataHandler.executor(groupEnum, json, eventType);
     }

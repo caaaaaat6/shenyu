@@ -62,6 +62,7 @@ public class ShenyuClientCommonBeanConfiguration {
      * @return the shenyu client config
      */
     @Bean
+    // 从 application.yml 中读取 shenyu 前缀的属性配置
     @ConfigurationProperties(prefix = "shenyu")
     public ShenyuClientConfig shenyuClientConfig() {
         return new ShenyuClientConfig();

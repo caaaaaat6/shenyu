@@ -120,6 +120,7 @@ public final class ShenyuWebHandler implements WebHandler, ApplicationListener<P
      * @param extPlugins the ext plugins
      */
     public void putExtPlugins(final List<ShenyuPlugin> extPlugins) {
+        // ext 的意思是 extension
         if (CollectionUtils.isEmpty(extPlugins)) {
             return;
         }
@@ -217,9 +218,11 @@ public final class ShenyuWebHandler implements WebHandler, ApplicationListener<P
         }
         final List<ShenyuPlugin> enabledPlugins = this.sourcePlugins.stream().filter(plugin -> plugin.named().equals(pluginData.getName())
                 && pluginData.getEnabled()).collect(Collectors.toList());
+        // 除去已经启用的插件列表，剩下的就是新的已启用的插件列表（可能启用在的 PluginData 对应多个插件）
         enabledPlugins.removeAll(this.plugins);
         // copy a new plugin list.
         List<ShenyuPlugin> newPluginList = new ArrayList<>(this.plugins);
+        // 将启用的插件列表加入新列表
         newPluginList.addAll(enabledPlugins);
         this.plugins = sortPlugins(newPluginList);
     }
@@ -268,7 +271,8 @@ public final class ShenyuWebHandler implements WebHandler, ApplicationListener<P
                     }
                     plugin.before(exchange);
                     Mono<Void> execute = plugin.execute(exchange, this);
-                    plugin.after(exchange);
+                    plugin.after(exchange); // 后置操作不依赖于 execute 执行结果。
+                                            // 实际上没有实现 before 和 after，两个都是空方法。
                     return execute;
                 }
                 return Mono.empty();

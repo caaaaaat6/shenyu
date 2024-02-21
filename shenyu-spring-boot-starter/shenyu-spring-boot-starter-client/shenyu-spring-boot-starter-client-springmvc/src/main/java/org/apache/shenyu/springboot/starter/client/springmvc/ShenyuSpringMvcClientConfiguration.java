@@ -66,20 +66,26 @@ public class ShenyuSpringMvcClientConfiguration {
                                                                       final ShenyuClientRegisterRepository shenyuClientRegisterRepository,
                                                                       final Environment env) {
         ClientPropertiesConfig clientPropertiesConfig = clientConfig.getClient().get(RpcTypeEnum.HTTP.getName());
+        // 拿到 yml 文件中的 shenyu.client.props
         Properties props = clientPropertiesConfig == null ? null : clientPropertiesConfig.getProps();
+        // 从 application.yml 中读取 spring.application.name、shenyu.discovery.type（为空则为DISCOVERY_LOCAL_MODE）
         String applicationName = env.getProperty("spring.application.name");
         String discoveryMode = env.getProperty("shenyu.discovery.type", ShenyuClientConstants.DISCOVERY_LOCAL_MODE);
         if (props != null) {
             String appName = props.getProperty(ShenyuClientConstants.APP_NAME);
             if (StringUtils.isBlank(appName)) {
+                // appName 为空，则设置为 spring.application.name
                 props.setProperty(ShenyuClientConstants.APP_NAME, applicationName);
             }
             String contextPath = props.getProperty(ShenyuClientConstants.CONTEXT_PATH);
             if (StringUtils.isBlank(contextPath)) {
+                // 为空则设置为 "/" + applicationName
                 props.setProperty(ShenyuClientConstants.CONTEXT_PATH, String.format("/%s", applicationName));
             }
+            // 设置发现模式 discoveryMode
             props.setProperty(ShenyuClientConstants.DISCOVERY_LOCAL_MODE_KEY, Boolean.valueOf(ShenyuClientConstants.DISCOVERY_LOCAL_MODE.equals(discoveryMode)).toString());
         }
+        // 返回监听器
         return new SpringMvcClientEventListener(clientPropertiesConfig, shenyuClientRegisterRepository, env);
     }
 

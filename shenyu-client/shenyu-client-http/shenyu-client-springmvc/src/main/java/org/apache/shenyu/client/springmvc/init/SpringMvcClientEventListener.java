@@ -97,6 +97,7 @@ public class SpringMvcClientEventListener extends AbstractContextRefreshedEventL
         this.protocol = props.getProperty(ShenyuClientConstants.PROTOCOL, ShenyuClientConstants.HTTP);
         this.addPrefixed = Boolean.parseBoolean(props.getProperty(ShenyuClientConstants.ADD_PREFIXED,
                 Boolean.FALSE.toString()));
+        // 添加注解（暂时不知道 mappingAnnotation 有什么用
         mappingAnnotation.add(ShenyuSpringMvcClient.class);
         mappingAnnotation.add(RequestMapping.class);
     }
@@ -120,20 +121,25 @@ public class SpringMvcClientEventListener extends AbstractContextRefreshedEventL
     @Override
     protected Map<String, Object> getBeans(final ApplicationContext context) {
         // Filter out
+        // isFull 这个 Boolean 值代表的是：是否代理整个服务，目前适用于 SpringMvc/SpringCould
         if (Boolean.TRUE.equals(isFull)) {
+            // 在全代理模式下，发布一个事件，这个事件包含了服务的元数据，用于注册服务
             getPublisher().publishEvent(MetaDataRegisterDTO.builder()
-                    .contextPath(getContextPath())
-                    .addPrefixed(addPrefixed)
-                    .appName(getAppName())
+                    .contextPath(getContextPath()) // 设置服务的上下文路径
+                    .addPrefixed(addPrefixed) // 设置是否添加前缀
+                    .appName(getAppName()) // 设置应用名称
                     .path(UriComponentsBuilder.fromUriString(PathUtils.decoratorPathWithSlash(getContextPath()) + EVERY_PATH).build().encode().toUriString())
-                    .rpcType(RpcTypeEnum.HTTP.getName())
-                    .enabled(true)
-                    .ruleName(getContextPath())
+                    // 设置服务的路径，这里使用了 UriComponentsBuilder 来构建URI，将上下文路径装饰后加上一个通配符，代表匹配所有路径
+                    .rpcType(RpcTypeEnum.HTTP.getName()) // 设置远程调用类型为 HTTP
+                    .enabled(true) // 设置服务为启用状态
+                    .ruleName(getContextPath()) // 使用上下文路径作为规则名称
                     .build());
             LOG.info("init spring mvc client success with isFull mode");
+            // 发布一个 URI 注册的事件，传入空的映射作为参数
             publisher.publishEvent(buildURIRegisterDTO(context, Collections.emptyMap()));
             return Collections.emptyMap();
         }
+        // shenyu-examples-http 用的不是全代理模式，因为 isFull 为 false，此时直接返回带 Controller 注解的 bean
         return context.getBeansWithAnnotation(Controller.class);
     }
 

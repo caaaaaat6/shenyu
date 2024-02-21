@@ -77,6 +77,7 @@ public class DisruptorProvider<T> {
             throw new IllegalArgumentException("The current provider is  of orderly type. Please use onOrderlyData() method.");
         }
         try {
+            // 由 ringBuffer 发布事件
             ringBuffer.publishEvent(translatorOneArg, data);
         } catch (Exception ex) {
             logger.error("ex", ex);

@@ -36,7 +36,9 @@ public class RecordLogDataChangedAdapterListener implements DataChangedListener,
     }
     
     @Override
+    // 产生 OperationRecordLog 日志，并插入数据库，标记 event 已消费。
     public void onApplicationEvent(final AdminDataModelChangedEvent event) {
+        // 判断 event 是否已消费
         if (event.isConsumed()) {
             return;
         }

@@ -60,6 +60,7 @@ public class SelectorEventPublisher implements AdminDataModelChangedEventPublish
      */
     @Override
     public void onCreated(final SelectorDO selector) {
+        // 发布“选择器创建事件”
         publish(new SelectorCreatedEvent(selector, SessionUtil.visitorName()));
     }
     
@@ -111,6 +112,7 @@ public class SelectorEventPublisher implements AdminDataModelChangedEventPublish
      */
     @Override
     public void publish(final AdminDataModelChangedEvent event) {
+        // 由 Spring 框架发布事件
         publisher.publishEvent(event);
     }
 }

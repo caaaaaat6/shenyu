@@ -74,6 +74,7 @@ public abstract class AbstractDataHandler<T> implements DataHandler {
                 break;
             case UPDATE:
             case CREATE:
+                // 事件类型为 UPDATE 和 CREATE 的事件都由 doUpdate 方法处理
                 doUpdate(dataList);
                 break;
             case DELETE:

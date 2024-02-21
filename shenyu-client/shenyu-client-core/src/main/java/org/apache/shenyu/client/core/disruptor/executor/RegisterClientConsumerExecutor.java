@@ -40,7 +40,9 @@ public final class RegisterClientConsumerExecutor<T extends DataTypeParent> exte
     }
 
     @Override
+    // run 接口继承自 QueueConsumerExecutor，而 QueueConsumerExecutor 继承自 Runnable
     public void run() {
+        // getData 方法继承自 QueueConsumerExecutor
         final T data = getData();
         subscribers.get(data.getType()).executor(Lists.newArrayList(data));
     }
@@ -54,6 +56,9 @@ public final class RegisterClientConsumerExecutor<T extends DataTypeParent> exte
         public RegisterClientConsumerExecutor<T> create() {
             Map<DataType, ExecutorTypeSubscriber<T>> map = getSubscribers()
                     .stream()
+                    // 将 AbstractQueueConsumerFactory#getSubscribers
+                    // 接口返回的 ExecutorSubscriber<T> 转为 ExecutorTypeSubscriber<T>，
+                    // 其带有 getType 接口
                     .map(e -> (ExecutorTypeSubscriber<T>) e)
                     .collect(Collectors.toMap(ExecutorTypeSubscriber::getType, e -> e));
             return new RegisterClientConsumerExecutor<>(map);

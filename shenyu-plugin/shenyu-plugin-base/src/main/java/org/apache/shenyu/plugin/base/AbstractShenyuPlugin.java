@@ -90,6 +90,7 @@ public abstract class AbstractShenyuPlugin implements ShenyuPlugin {
      */
     @Override
     public Mono<Void> execute(final ServerWebExchange exchange, final ShenyuPluginChain chain) {
+        // 初始化缓存
         initCacheConfig();
         final String pluginName = named();
         PluginData pluginData = BaseDataCache.getInstance().obtainPluginData(pluginName);
@@ -118,7 +119,7 @@ public abstract class AbstractShenyuPlugin implements ShenyuPlugin {
         }
         printLog(selectorData, pluginName);
         if (!selectorData.getContinued()) {
-            // if continued， not match rules
+            // if continued， not match rules （这里注释错了吧，应该是 if not continued, do not match rules
             return doExecute(exchange, chain, selectorData, defaultRuleData(selectorData));
         }
         List<RuleData> rules = BaseDataCache.getInstance().obtainRuleData(selectorData.getId());
@@ -153,6 +154,7 @@ public abstract class AbstractShenyuPlugin implements ShenyuPlugin {
         return doExecute(exchange, chain, selectorData, ruleData);
     }
 
+    // 拿到 selectorMatch 和 ruleMatch、 selectorTrie 和 ruleTrie 缓存
     private void initCacheConfig() {
         if (Objects.isNull(selectorMatchConfig) || Objects.isNull(ruleMatchConfig)) {
             ShenyuConfig shenyuConfig = SpringBeanUtils.getInstance().getBean(ShenyuConfig.class);

@@ -42,6 +42,7 @@ public class WebSocketSyncConfiguration {
      * @return the data changed listener
      */
     @Bean
+    // 模块化开发时这个注解有用，避免产生重复的 bean
     @ConditionalOnMissingBean(WebsocketDataChangedListener.class)
     public DataChangedListener websocketDataChangedListener() {
         return new WebsocketDataChangedListener();

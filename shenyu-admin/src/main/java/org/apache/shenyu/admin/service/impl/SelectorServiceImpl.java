@@ -98,6 +98,7 @@ public class SelectorServiceImpl implements SelectorService {
 
     private final PluginMapper pluginMapper;
 
+    // Spring 框架的一个事件发布机制，事件发布者
     private final ApplicationEventPublisher eventPublisher;
 
     private final SelectorEventPublisher selectorEventPublisher;
@@ -190,11 +191,18 @@ public class SelectorServiceImpl implements SelectorService {
     @Override
     public int create(final SelectorDTO selectorDTO) {
         SelectorDO selectorDO = SelectorDO.buildSelectorDO(selectorDTO);
+        // 有选择地插入数据，不为 null 的属性则插入
         final int selectorCount = selectorMapper.insertSelective(selectorDO);
         selectorDTO.setId(selectorDO.getId());
+        // 创建 condition
         createCondition(selectorDO.getId(), selectorDTO.getSelectorConditions());
+        // 调用 publishEvent 发布 DataChangedEvent 事件，由 DataChangedEventDispatcher 监听，
+        // 其成员变量中的 WebsocketDataChangedListener 的 onSelectorChanged 方法调用
+        // WebsocketCollector 的 send 方法将消息 push 出去
         publishEvent(selectorDO, selectorDTO.getSelectorConditions(), Collections.emptyList());
         if (selectorCount > 0) {
+            // 如果插入数据库成功，则发布 SelectorEvent 事件，onCreated 方法发布了一个 SelectorCreatedEvent 事件，
+            // 这个事件将被 RecordLogDataChangedAdapterListener 监听，并由其产生操作日志插入数据库中
             selectorEventPublisher.onCreated(selectorDO);
         }
         return selectorCount;
@@ -449,6 +457,7 @@ public class SelectorServiceImpl implements SelectorService {
         // build selector data.
         SelectorData selectorData = SelectorDO.transFrom(selectorDO, pluginDO.getName(), conditionDataList, beforeConditionDataList);
         // publish change event.
+        // 将数据变动 DataChangedEvent 对象发布出去
         eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.SELECTOR, DataEventTypeEnum.UPDATE,
                 Collections.singletonList(selectorData)));
     }

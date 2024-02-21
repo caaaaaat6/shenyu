@@ -113,6 +113,7 @@ public class HttpClientRegisterRepository extends FailbackRegistryRepository {
     @Override
     public void doPersistURI(final URIRegisterDTO registerDTO) {
         if (RuntimeUtils.listenByOther(registerDTO.getPort())) {
+            // 如果端口已被其他进程监听，则直接返回，不需要再注册
             return;
         }
         doRegister(registerDTO, Constants.URI_PATH, Constants.URI);
